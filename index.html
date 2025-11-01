@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌿 Chai at Water’s Edge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fef3c7;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #b45309;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      position: relative;
+    }
+    #viewDeals {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #fff7ed;
+      color: #78350f;
+      border: 2px solid #d6b453;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      padding: 5px 8px;
+      cursor: pointer;
+      width: 25%;
+    }
+    #viewDeals:hover {
+      background: #fde68a;
+    }
+    .container {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 550px;
+      margin: 20px auto;
+    }
+    h1 { text-align: center; color: #92400e; margin-bottom: 10px; }
+    label { display: block; margin: 10px 0 5px; font-weight: bold; }
+    select, input, textarea, button {
+      width: 100%; padding: 10px;
+      border-radius: 10px; border: 1px solid #d6b453;
+      font-size: 1rem;
+    }
+    textarea { resize: none; height: 60px; }
+    button {
+      background-color: #b45309; color: white;
+      border: none; margin-top: 15px;
+      cursor: pointer; font-weight: bold;
+    }
+    button:hover { background-color: #92400e; }
+    .popup {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none; justify-content: center; align-items: center;
+      z-index: 10;
+    }
+    .popup-content {
+      background: white; padding: 25px;
+      border-radius: 15px; text-align: center;
+      width: 80%; max-width: 400px;
+      color: #78350f;
+    }
+    .tracker-card {
+      margin-top: 20px; background-color: #fff7ed;
+      border: 2px solid #d6b453; border-radius: 15px;
+      padding: 15px; text-align: center;
+    }
+    #adminSection {
+      display: none;
+      width: 90%; max-width: 700px;
+      background: #fff7ed; margin: 30px auto;
+      padding: 20px; border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #d6b453; padding: 8px;
+      text-align: center;
+    }
+    th { background: #b45309; color: white; }
+  </style>
+</head>
+<body>
+  <header>
+    🌿 Chai at Water’s Edge
+    <button id="viewDeals" onclick="openDeals()">View Deals</button>
+  </header>
+
+  <!-- Deals Popup -->
+  <div class="popup" id="dealsPopup">
+    <div class="popup-content">
+      <h2>🔥 Current Chai Deals 🔥</h2>
+      <p>☕ Buy 2+ chai → Get a FREE Parle-G biscuit!</p>
+      <p>🫖 Buy 3+ chai → Get 10% off!</p>
+      <p>🥤 Variety Pack Deal (1 Small + 1 Medium + 1 Large) — 20% off!</p>
+      <button onclick="closeDeals()">Got it!</button>
+    </div>
+  </div>
+
+  <div class="container" id="orderContainer">
+    <h1>Order Your Chai</h1>
+    <form id="chaiForm">
+      <label for="orderType">Order Type:</label>
+      <select id="orderType" onchange="toggleDeliveryFields()">
+        <option value="pickup">Pickup</option>
+        <option value="delivery">Delivery</option>
+      </select>
+
+      <div id="deliveryFields">
+        <label for="recipient">Recipient Name:</label>
+        <input type="text" id="recipient" placeholder="Enter recipient name" required>
+        <label for="address">Address:</label>
+        <input type="text" id="address" value="Water’s Edge, Franklin, TN">
+      </div>
+
+      <label>Small Chai ($0.50):</label>
+      <input type="number" id="smallQty" min="0" value="0" onchange="updateTotal()">
+      <label>Medium Chai ($1.00):</label>
+      <input type="number" id="mediumQty" min="0" value="0" onchange="updateTotal()">
+      <label>Large Chai ($1.50):</label>
+      <input type="number" id="largeQty" min="0" value="0" onchange="updateTotal()">
+
+      <label><input type="checkbox" id="cookiePack" onchange="updateTotal()"> Add 8 Good Day Cookies ($2)</label>
+      <label><input type="checkbox" id="parlePack" onchange="updateTotal()"> Add Parle-G biscuit ($0.50)</label>
+
+      <label>Sugar Level:</label>
+      <select id="sugarLevel">
+        <option>No Sugar 🧊</option>
+        <option selected>Medium 🍬</option>
+        <option>Extra Sweet 🍯</option>
+      </select>
+
+      <label for="tipAmount">Tip ($):</label>
+      <input type="number" id="tipAmount" min="0" step="0.25" value="0" onchange="updateTotal()">
+
+      <p id="total" style="font-weight:bold; text-align:center;">Total: $0.00</p>
+
+      <button type="button" onclick="submitOrder()">Submit Order</button>
+    </form>
+  </div>
+
+  <!-- Admin Section -->
+  <div id="adminLogin" class="container" style="text-align:center;">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPassword" placeholder="Enter password">
+    <button onclick="loginAdmin()">Login</button>
+  </div>
+
+  <div id="adminSection">
+    <h2>Admin Dashboard</h2>
+    <table id="ordersTable">
+      <thead>
+        <tr>
+          <th>ID</th><th>Recipient</th><th>Type</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const prices = { small: 0.5, medium: 1, large: 1.5, cookies: 2, parle: 0.5 };
+
+    function openDeals() {
+      document.getElementById("dealsPopup").style.display = "flex";
+    }
+    function closeDeals() {
+      document.getElementById("dealsPopup").style.display = "none";
+    }
+
+    function toggleDeliveryFields() {
+      const type = document.getElementById("orderType").value;
+      const addressField = document.getElementById("address");
+      if (type === "pickup") {
+        addressField.value = "Pickup at Chai Counter";
+      } else {
+        addressField.value = "Water’s Edge, Franklin, TN";
+      }
+    }
+
+    function calculateTotal() {
+      let total = 0;
+      let totalChais = 0;
+      const s = Number(document.getElementById('smallQty').value);
+      const m = Number(document.getElementById('mediumQty').value);
+      const l = Number(document.getElementById('largeQty').value);
+      totalChais = s + m + l;
+      total += s * prices.small + m * prices.medium + l * prices.large;
+      if (document.getElementById('cookiePack').checked) total += prices.cookies;
+      if (document.getElementById('parlePack').checked) total += prices.parle;
+      total += Number(document.getElementById('tipAmount').value);
+      if (totalChais >= 3) total *= 0.9;
+      return total.toFixed(2);
+    }
+
+    function updateTotal() {
+      document.getElementById('total').textContent = "Total: $" + calculateTotal();
+    }
+
+    async function submitOrder() {
+      const order = {
+        recipient: document.getElementById('recipient').value,
+        type: document.getElementById('orderType').value,
+        address: document.getElementById('address').value,
+        small: document.getElementById('smallQty').value,
+        medium: document.getElementById('mediumQty').value,
+        large: document.getElementById('largeQty').value,
+        cookies: document.getElementById('cookiePack').checked,
+        parle: document.getElementById('parlePack').checked,
+        sugar: document.getElementById('sugarLevel').value,
+        tip: document.getElementById('tipAmount').value,
+        total: calculateTotal(),
+        status: "☕ Preparing"
+      };
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(order)
+      });
+      if (res.ok) {
+        alert("✅ Order submitted successfully!");
+        document.getElementById('chaiForm').reset();
+        updateTotal();
+      } else {
+        alert("❌ Error submitting order!");
+      }
+    }
+
+    async function loginAdmin() {
+      const pw = document.getElementById("adminPassword").value;
+      if (pw === "121215") {
+        document.getElementById("adminLogin").style.display = "none";
+        document.getElementById("adminSection").style.display = "block";
+        loadOrders();
+      } else {
+        alert("Wrong password!");
+      }
+    }
+
+    async function loadOrders() {
+      const res = await fetch('/api/orders');
+      const orders = await res.json();
+      const tbody = document.querySelector('#ordersTable tbody');
+      tbody.innerHTML = "";
+      orders.forEach((o, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${o.recipient}</td>
+          <td>${o.type}</td>
+          <td>${o.small}S ${o.medium}M ${o.large}L ${o.cookies ? '+ Cookies' : ''} ${o.parle ? '+ Parle-G' : ''}</td>
+          <td>$${o.total}</td>
+          <td>
+            <select onchange="updateStatus(${i}, this.value)">
+              <option ${o.status==='☕ Preparing'?'selected':''}>☕ Preparing</option>
+              <option ${o.status==='🚗 Out for Delivery'?'selected':''}>🚗 Out for Delivery</option>
+              <option ${o.status==='✅ Delivered'?'selected':''}>✅ Delivered</option>
+            </select>
+          </td>
+          <td><button onclick="deleteOrder(${i})">🗑️ Delete</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function updateStatus(index, newStatus) {
+      await fetch(`/api/orders/${index}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({status: newStatus})
+      });
+      loadOrders();
+    }
+
+    async function deleteOrder(index) {
+      await fetch(`/api/orders/${index}`, { method: 'DELETE' });
+      loadOrders();
+    }
+  </script>
+</body>
+</html>
