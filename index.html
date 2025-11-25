@@ -113,7 +113,7 @@
 
   <div class="container" id="orderContainer">
     <h1>Order Your Chai</h1>
-    <form id="chaiForm">
+    <form id="chaiForm" onsubmit="event.preventDefault(); submitOrder();">
       <label for="orderType">Order Type:</label>
       <select id="orderType" onchange="toggleDeliveryFields()">
         <option value="pickup">Pickup</option>
@@ -124,7 +124,7 @@
         <label for="recipient">Recipient Name:</label>
         <input type="text" id="recipient" placeholder="Enter recipient name" required>
         <label for="address">Address:</label>
-        <input type="text" id="address" value="Water’s Edge, Franklin, TN">
+        <input type="text" id="address" value="Water’s Edge, Franklin, TN" required>
       </div>
 
       <label>Small Chai ($0.50):</label>
@@ -149,7 +149,7 @@
 
       <p id="total" style="font-weight:bold; text-align:center;">Total: $0.00</p>
 
-      <button type="button" onclick="submitOrder()">Submit Order</button>
+      <button id="submitBtn" type="submit">Submit Order</button>
     </form>
   </div>
 
@@ -211,14 +211,34 @@
       document.getElementById('total').textContent = "Total: $" + calculateTotal();
     }
 
+    // Improved Submit Order with validation and status feedback:
     async function submitOrder() {
+      const recipient = document.getElementById('recipient').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const s = Number(document.getElementById('smallQty').value);
+      const m = Number(document.getElementById('mediumQty').value);
+      const l = Number(document.getElementById('largeQty').value);
+
+      if (!recipient) {
+        alert('Please enter the recipient name.');
+        return;
+      }
+      if (!address) {
+        alert('Please enter the address.');
+        return;
+      }
+      if ((s + m + l) === 0) {
+        alert('Please order at least one chai.');
+        return;
+      }
+
       const order = {
-        recipient: document.getElementById('recipient').value,
+        recipient,
         type: document.getElementById('orderType').value,
-        address: document.getElementById('address').value,
-        small: document.getElementById('smallQty').value,
-        medium: document.getElementById('mediumQty').value,
-        large: document.getElementById('largeQty').value,
+        address,
+        small: s,
+        medium: m,
+        large: l,
         cookies: document.getElementById('cookiePack').checked,
         parle: document.getElementById('parlePack').checked,
         sugar: document.getElementById('sugarLevel').value,
@@ -227,18 +247,32 @@
         status: "☕ Preparing"
       };
 
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(order)
-      });
-      if (res.ok) {
-        alert("✅ Order submitted successfully!");
-        document.getElementById('chaiForm').reset();
-        updateTotal();
-      } else {
-        alert("❌ Error submitting order!");
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(order)
+        });
+
+        if (res.ok) {
+          alert("✅ Order submitted successfully!");
+          document.getElementById('chaiForm').reset();
+          updateTotal();
+        } else {
+          const err = await res.text();
+          alert("❌ Error submitting order!\n" + err);
+          console.error(err);
+        }
+      } catch (e) {
+        alert("❌ Network error submitting order!\n" + e.message);
+        console.error(e);
       }
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Order";
     }
 
     async function loginAdmin() {
@@ -291,6 +325,9 @@
       await fetch(`/api/orders/${index}`, { method: 'DELETE' });
       loadOrders();
     }
+
+    // Initial total on page load
+    window.onload = updateTotal;
   </script>
 </body>
 </html>
